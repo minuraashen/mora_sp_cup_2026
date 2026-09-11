@@ -10,3 +10,5 @@ competition_data/submissions/
 
 __pycache__/
 *.py[cod]
+
+*.pdf

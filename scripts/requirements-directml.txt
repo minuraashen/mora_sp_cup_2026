@@ -1,0 +1,3 @@
+# Optional Windows GPU runtime; install in a local environment.
+onnxruntime-directml==1.24.4
+onnx==1.22.0

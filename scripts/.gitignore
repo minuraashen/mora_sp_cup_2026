@@ -1,0 +1,7 @@
+weights/*.pth
+weights/*.part
+weights/*.onnx
+weights/*.onnx.data
+runs/
+__pycache__/
+.venv*/

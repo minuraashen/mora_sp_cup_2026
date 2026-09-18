@@ -1,0 +1,12 @@
+# Optional legacy native Windows training environment, Python 3.11.
+# Keep separate from current PyTorch / ONNX inference environments.
+# Only the verified upstream checkpoint and locally trained weights are loaded.
+torch-directml==0.2.5.dev240914
+torch==2.4.1
+torchvision==0.19.1
+numpy==1.26.4
+Pillow==10.4.0
+scipy==1.17.1
+scikit-image==0.26.0
+PyWavelets==1.8.0
+opencv-python-headless==4.10.0.84

@@ -1,0 +1,221 @@
+{
+  "convention": "residual R = noisy_uint8 - clean_uint8 (8-bit units, [-255,255]); divide by 255 for [0,1] float",
+  "seed": 0,
+  "task3_sigma": {
+    "sigma_blind_noisy_8bit": {
+      "min": 5.862415896176025,
+      "p05": 10.540266399008004,
+      "median": 24.925217736955542,
+      "mean": 24.407175201554494,
+      "p95": 35.709801654399676,
+      "max": 42.825301342441115,
+      "std": 7.510945710667425
+    },
+    "sigma_residual_std_8bit": {
+      "min": 7.849051734866069,
+      "p05": 12.24131167097991,
+      "median": 27.794075910435026,
+      "mean": 27.113580959350696,
+      "p95": 38.1567607920512,
+      "max": 43.028753847946575,
+      "std": 7.623558951913633
+    },
+    "sigma_residual_mad_8bit": {
+      "min": 5.9304,
+      "p05": 10.3782,
+      "median": 25.2042,
+      "mean": 25.03015565217391,
+      "p95": 37.065,
+      "max": 44.477999999999994,
+      "std": 7.929292236705414
+    },
+    "note": "blind estimate_sigma on noisy image tracks true residual std; MAD is more robust to impulses"
+  },
+  "stratified_sample_ids": [
+    8,
+    13,
+    20,
+    21,
+    24,
+    30,
+    36,
+    38,
+    48,
+    49,
+    70,
+    74,
+    75,
+    89,
+    106,
+    108,
+    110,
+    122,
+    123,
+    129,
+    131,
+    133,
+    138,
+    139,
+    153,
+    161,
+    181,
+    186,
+    204,
+    229,
+    232,
+    244,
+    247,
+    251,
+    255,
+    272,
+    296,
+    307,
+    311,
+    314,
+    315,
+    317,
+    331,
+    344,
+    361,
+    370,
+    383,
+    384,
+    394,
+    395,
+    397,
+    406,
+    417,
+    418,
+    431,
+    439,
+    444,
+    447,
+    449,
+    459
+  ],
+  "stratified_sample_size": 60,
+  "defect_sample_size": 200,
+  "task1_residual_moments": {
+    "R": {
+      "n": 2400000,
+      "mean": 1.39391875,
+      "std": 29.333472236253673,
+      "skew": 0.031057998209233894,
+      "kurtosis_excess": 1.8594626134585361,
+      "p01": -76.0,
+      "p99": 77.0,
+      "frac_abs_gt_3std": 0.009503333333333334
+    },
+    "G": {
+      "n": 2400000,
+      "mean": 1.4858254166666667,
+      "std": 28.18875029595767,
+      "skew": 0.01774832921051982,
+      "kurtosis_excess": 2.0440361541628143,
+      "p01": -73.0,
+      "p99": 73.0,
+      "frac_abs_gt_3std": 0.009372916666666667
+    },
+    "B": {
+      "n": 2400000,
+      "mean": 1.8418983333333334,
+      "std": 27.95785805809041,
+      "skew": 0.08469946195761274,
+      "kurtosis_excess": 2.357562601301362,
+      "p01": -72.0,
+      "p99": 75.0,
+      "frac_abs_gt_3std": 0.0100275
+    }
+  },
+  "task2_noise_model": {
+    "form": "var(R) = a*I + b   (I in 8-bit intensity units)",
+    "fit": {
+      "R": {
+        "a_slope_8bit": 4.359209452439741,
+        "b_intercept_8bit": 413.721043449924,
+        "a_slope_norm01": 0.017094939029175454,
+        "b_intercept_norm01": 0.0063624920176843375,
+        "read_sigma_8bit": 20.340133811013242
+      },
+      "G": {
+        "a_slope_8bit": 4.215734690503484,
+        "b_intercept_8bit": 369.60753471413705,
+        "a_slope_norm01": 0.016532292903935233,
+        "b_intercept_norm01": 0.005684083578841015,
+        "read_sigma_8bit": 19.225179705639608
+      },
+      "B": {
+        "a_slope_8bit": 4.856560407691015,
+        "b_intercept_8bit": 357.1407538427499,
+        "a_slope_norm01": 0.019045334932121627,
+        "b_intercept_norm01": 0.0054923606896232205,
+        "read_sigma_8bit": 18.898168002289268
+      }
+    },
+    "interpretation": "a>0 => shot-noise-like signal dependence; b => read-noise variance floor"
+  },
+  "task4_autocorrelation": {
+    "n_patches": 379,
+    "patch_px": 64,
+    "acf_normalized_lags": {
+      "R": {
+        "acf_lag1_h": 0.027166999336500824,
+        "acf_lag1_v": 0.026762830839879157,
+        "acf_lag2_h": 0.025426602530247186,
+        "acf_lag2_v": 0.026389554659232598,
+        "acf_lag3_h": 0.02377220957065288,
+        "acf_lag3_v": 0.026017674281714902
+      },
+      "G": {
+        "acf_lag1_h": 0.030019749417422758,
+        "acf_lag1_v": 0.0315678433297778,
+        "acf_lag2_h": 0.029439473858071573,
+        "acf_lag2_v": 0.031683058739905824,
+        "acf_lag3_h": 0.029648861089144083,
+        "acf_lag3_v": 0.028950937539147716
+      },
+      "B": {
+        "acf_lag1_h": 0.02889720601195225,
+        "acf_lag1_v": 0.029536560068277862,
+        "acf_lag2_h": 0.026908687437177562,
+        "acf_lag2_v": 0.028904784065906585,
+        "acf_lag3_h": 0.02624271827896897,
+        "acf_lag3_v": 0.025357290912222826
+      }
+    },
+    "note": "1.0 at lag0 by construction; ~0 at lag>=1 => white noise; large => spatially correlated"
+  },
+  "task5_defects": {
+    "k_threshold_robust_sigma": 6.0,
+    "impulse_fraction_mean": 0.00033176873319892467,
+    "impulse_fraction_median": 0.0002952043769510926,
+    "impulse_fraction_max": 0.0015916986429066946,
+    "per_image_impulse_fraction_p95": 0.0008096356876517514,
+    "n_images_used": 200,
+    "mean_per_pixel_outlier_rate": 0.000498046875,
+    "n_pixels_outlier_gt_50pct_images": 492,
+    "n_pixels_outlier_gt_25pct_images": 492,
+    "n_pixels_outlier_gt_10pct_images": 492,
+    "max_per_pixel_outlier_rate": 0.7,
+    "interpretation": "hot_50/hot_25 >> 0 indicates FIXED-LOCATION hot pixels; if ~0 and max rate near mean rate => random per-image impulses"
+  },
+  "task6_ycbcr": {
+    "Y": {
+      "mean": 17.302213809999998,
+      "median": 17.98467930000001,
+      "std": 5.328034109552905
+    },
+    "Cb": {
+      "mean": 14.7844021976,
+      "median": 15.141426115200002,
+      "std": 4.929179166400699
+    },
+    "Cr": {
+      "mean": 16.09650161616,
+      "median": 16.493924999999983,
+      "std": 5.205952292355134
+    },
+    "ratio_Cb_over_Y_median": 0.8419069288157945,
+    "ratio_Cr_over_Y_median": 0.917109764642841
+  }
+}

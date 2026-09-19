@@ -282,6 +282,18 @@ def main() -> int:
     else:
         check("freeze manifest present (scripts/tools/freeze.py)", False, str(manifest_path))
 
+    # 14 -- the README's stated frozen-commit SHA must still describe HEAD.
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import freeze  # noqa: E402
+    head = freeze.git("rev-parse", "HEAD")
+    stated = freeze.stated_sha(args.readme.read_text(encoding="utf-8")) if args.readme.exists() else None
+    if head and stated:
+        ok_offset, why = freeze.verify_offset(stated, head)
+        check("README's frozen-commit SHA is consistent with HEAD", ok_offset, why)
+    else:
+        check("README's frozen-commit SHA is stamped", False,
+              "run scripts/tools/freeze.py --stamp, then commit")
+
     n_fail = sum(1 for _, ok, _ in results if not ok)
     print()
     if n_fail:

@@ -1,0 +1,8 @@
+{
+  "arch": "w32",
+  "bytes": 58525221,
+  "path": "C:\\Users\\ADMIN\\Desktop\\mora_sp_cup_2026\\scripts\\weights\\voxel_nafnet.pth",
+  "sha256": "6acdff27227bbde63386f37fb07f06d3db08656bb76b38ae3f3f2c240c903ae8",
+  "step": 38928,
+  "val_composite": null
+}

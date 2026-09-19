@@ -1,0 +1,25 @@
+# Packed training data (2.7 GB of memmaps) -- regenerate with train/prepare_data.py.
+# split.json, noisy_baseline.json, hotpixels.npy and weights.json are small and ARE
+# tracked, because they define the validation split and the model provenance.
+artifacts/*.npy
+!artifacts/hotpixels.npy
+
+# Training runs, validation outputs, ablation scratch.
+_runs/
+
+# The pretrained initialisation is fetched by train/fetch_weights.py; only the
+# exported submission checkpoint is committed.
+weights/NAFNet-SIDD-width32.pth
+weights/scunet_color_real_psnr.pth
+weights/*.part
+
+# LaTeX build artefacts
+report/*.aux
+report/*.log
+report/*.out
+report/*.synctex.gz
+report/*.fls
+report/*.fdb_latexmk
+
+__pycache__/
+*.py[cod]

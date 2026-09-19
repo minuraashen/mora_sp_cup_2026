@@ -1,0 +1,9 @@
+{
+  "nafnet_sidd_w32": {
+    "bytes": 116861841,
+    "filename": "NAFNet-SIDD-width32.pth",
+    "note": "NAFNet SIDD width32, MIT/Apache-2.0 (megvii-research/NAFNet)",
+    "sha256": "89c70e808d1783b6c07911306e106aaf0d4f7f3da8c61078b99ff7f8929a26f4",
+    "url": "https://huggingface.co/nyanko7/nafnet-models/resolve/main/NAFNet-SIDD-width32.pth"
+  }
+}

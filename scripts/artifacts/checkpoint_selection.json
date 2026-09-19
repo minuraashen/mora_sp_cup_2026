@@ -1,0 +1,108 @@
+{
+  "all": [
+    {
+      "composite": 0.6433182663786372,
+      "label": "hour_04.pth:model",
+      "step": 38928
+    },
+    {
+      "composite": 0.6429988320521262,
+      "label": "hour_04.pth:ema",
+      "step": 38928
+    },
+    {
+      "composite": 0.642874503393417,
+      "label": "best_ema.pth:model",
+      "step": 40000
+    },
+    {
+      "composite": 0.6428475397930998,
+      "label": "best_raw.pth:model",
+      "step": 40000
+    },
+    {
+      "composite": 0.6423801508760282,
+      "label": "last.pth:ema",
+      "step": 48000
+    },
+    {
+      "composite": 0.6420990190525625,
+      "label": "last.pth:model",
+      "step": 48000
+    },
+    {
+      "composite": 0.6392692457596709,
+      "label": "hour_03.pth:ema",
+      "step": 29247
+    },
+    {
+      "composite": 0.6365960610423353,
+      "label": "hour_02.pth:ema",
+      "step": 19610
+    },
+    {
+      "composite": 0.6363191978151032,
+      "label": "hour_03.pth:model",
+      "step": 29247
+    },
+    {
+      "composite": 0.6316897741936432,
+      "label": "hour_02.pth:model",
+      "step": 19610
+    },
+    {
+      "composite": 0.6290488636745483,
+      "label": "hour_01.pth:ema",
+      "step": 9617
+    },
+    {
+      "composite": 0.6162342491698084,
+      "label": "hour_01.pth:model",
+      "step": 9617
+    },
+    {
+      "composite": 0.3366746503586329,
+      "label": "hour_00.pth:model",
+      "step": 1
+    },
+    {
+      "composite": 0.3366746503586329,
+      "label": "hour_00.pth:ema",
+      "step": 1
+    }
+  ],
+  "n_candidates": 14,
+  "run": "run1",
+  "winner": {
+    "composite": 0.6433182663786372,
+    "config": {
+      "chroma_smooth": "0",
+      "classical_method": "wavelet",
+      "device": "cuda",
+      "gamma": "0.0",
+      "gat_prenet": "False",
+      "limit": "0",
+      "mode": "net",
+      "no_prepass": "False",
+      "prepass": "False",
+      "skip_subprocess": "True",
+      "subset": "val",
+      "tag": "sel_hour_04.pth_model",
+      "tile": "0",
+      "tlc": "0",
+      "tta": "1",
+      "weights": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\tmp7aukw9wz\\hour_04.pth_model.pth"
+    },
+    "delta_psnr": 11.812828704987382,
+    "delta_ssim": 0.46348118644369685,
+    "label": "hour_04.pth:model",
+    "ms_per_image": 576.8231049827908,
+    "n": 46,
+    "noisy_psnr": 19.81667624699739,
+    "noisy_ssim": 0.4559830855578184,
+    "psnr": 31.629504951984767,
+    "ssim": 0.9194642720015153,
+    "step": 38928,
+    "tag": "sel_hour_04.pth_model"
+  }
+}

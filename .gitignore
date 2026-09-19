@@ -12,3 +12,5 @@ __pycache__/
 *.py[cod]
 
 *.pdf
+# Generated submission bundle (output of tools/make_submission.py)
+/Voxel.zip

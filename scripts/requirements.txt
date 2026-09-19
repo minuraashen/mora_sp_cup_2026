@@ -1,0 +1,18 @@
+# Team Voxel -- Mora SP Cup 2026 preliminary submission.
+# Tested with Python 3.11.16 (conda env `spcup26`) on Windows 11.
+#
+# Inference (scripts/denoise.py) needs only the first three packages. scipy is used
+# by the optional blind noise-level diagnostic, and scikit-image only by the offline
+# classical fallback denoiser; both are imported lazily so their absence cannot break
+# the graded path.
+#
+# torch is the CPU build: the submitted images were generated on CPU and the default
+# device is cpu, so no CUDA installation is required to reproduce them.
+
+torch==2.14.0
+numpy==1.26.4
+Pillow==10.4.0
+
+# optional (fallback / diagnostics only)
+scipy==1.17.1
+scikit-image==0.26.0

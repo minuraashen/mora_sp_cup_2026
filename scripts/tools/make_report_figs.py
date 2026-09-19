@@ -48,8 +48,13 @@ def ablation_table(out: Path) -> None:
     rows = json.loads(src.read_text())
     ref = rows.get("ours", {}).get("composite")
 
-    lines = [r"\begin{tabular}{lrrrr}", r"\toprule",
-             r"Configuration & PSNR & SSIM & Composite & ms/img \\", r"\midrule"]
+    # Scores only -- deliberately no runtime column. Rows were collected on different
+    # devices (network rows on GPU for speed, classical rows on CPU), and while the
+    # SCORES are device-independent -- CPU and GPU agree to 5e-6 on the submitted
+    # configuration -- the TIMINGS are not comparable across devices. Runtime is
+    # reported separately from scripts/tools/bench_cpu.py, all on one CPU.
+    lines = [r"\begin{tabular}{lrrr}", r"\toprule",
+             r"Configuration & PSNR & SSIM & Composite \\", r"\midrule"]
     for name in TABLE_ORDER:
         if name == "REJECTED":
             if any(n in rows for n in TABLE_ORDER[TABLE_ORDER.index("REJECTED") + 1:]):
@@ -62,8 +67,7 @@ def ablation_table(out: Path) -> None:
         cells = [label,
                  format(s["psnr"], ".2f"),
                  format(s["ssim"], ".4f"),
-                 format(s["composite"], ".4f"),
-                 format(s["ms_per_image"], ".0f")]
+                 format(s["composite"], ".4f")]
         if name == "ours":
             cells = [r"\textbf{" + c + "}" for c in cells]
         lines.append(" & ".join(cells) + r" \\")

@@ -74,8 +74,14 @@ def main() -> int:
             print(f"  composite={s['composite']:.4f}  psnr={s['psnr']:.3f}  "
                   f"{s['ms_per_image']:.0f} ms/img")
 
+    # Merge into any previous results rather than overwriting them: rows are often
+    # collected in several passes (some on GPU for speed, some on CPU for runtime),
+    # and an overwrite silently drops the ones not in this invocation.
     out = SCRIPTS / "_runs" / "ablation.json"
-    out.write_text(json.dumps(rows, indent=2), encoding="utf-8")
+    merged = json.loads(out.read_text()) if out.exists() else {}
+    merged.update(rows)
+    out.write_text(json.dumps(merged, indent=2), encoding="utf-8")
+    rows = merged
 
     ref = rows.get("ours", {}).get("composite")
     print(f"\n{'config':<44} {'PSNR':>7} {'SSIM':>8} {'dPSNR':>7} {'dSSIM':>7} "

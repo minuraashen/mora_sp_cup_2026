@@ -1,8 +1,19 @@
-\begin{tabular}{lrrrr}
+\begin{tabular}{lrrr}
 \toprule
-Configuration & PSNR & SSIM & Composite & ms/img \\
+Configuration & PSNR & SSIM & Composite \\
 \midrule
-Classical, no impulse pre-pass & 25.81 & 0.7509 & 0.3578 & 191 \\
-Classical only (VST + wavelet + median) & 26.12 & 0.7580 & 0.3730 & 606 \\
+Classical, no impulse pre-pass & 25.81 & 0.7509 & 0.3578 \\
+Classical only (VST + wavelet + median) & 26.12 & 0.7580 & 0.3730 \\
+\textbf{NAFNet, fine-tuned (submitted)} & \textbf{31.63} & \textbf{0.9195} & \textbf{0.6433} \\
+Ours + TTA x4 & 31.69 & 0.9203 & 0.6456 \\
+Ours + TTA x8 & 31.71 & 0.9207 & 0.6464 \\
+Ours, tiled 512 (identity check) & 31.47 & 0.9194 & 0.6393 \\
+\midrule
+Ours + gated adaptive median pre-pass (rejected) & 31.32 & 0.9162 & 0.6304 \\
+Ours + TLC(384) & 31.58 & 0.9193 & 0.6420 \\
+Ours + chroma smoothing (rejected) & 31.60 & 0.9194 & 0.6421 \\
+Ours + gamma 1.05 brightening (rejected) & 30.30 & 0.9167 & 0.6001 \\
+Ours + Anscombe VST before net (rejected) & 29.51 & 0.9001 & 0.5655 \\
+Classical with Anscombe VST (rejected variant) & 23.86 & 0.6848 & 0.2605 \\
 \bottomrule
 \end{tabular}

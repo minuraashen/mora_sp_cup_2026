@@ -12,3 +12,7 @@ __pycache__/
 *.py[cod]
 
 *.pdf
+
+# Large checkpoint delivery artifacts are hosted on Drive, not regular Git.
+/experiments/**/checkpoints/*.pth
+/output/checkpoints/

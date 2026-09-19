@@ -28,6 +28,67 @@ Test ground truth is hidden, so test PSNR/SSIM cannot be measured locally.
 Final reports distinguish the 50 validation images from all 460 public images,
 which include training data. No 34-35 dB result is assumed.
 
+## Frozen model downloads and checksums
+
+The model files are stored in this Google Drive folder because each complete
+checkpoint is larger than GitHub's regular-file limit:
+
+<https://drive.google.com/drive/folders/17kgPjzU7mZB9a68rZt4CCm7TQoWH12Ej?usp=sharing>
+
+### Competition CLI checkpoint
+
+The default `scripts/denoise.py` entry point requires:
+
+```text
+Filename:      Wavelet-NAFNet-Mora-best.pth
+Expected path: scripts/weights/Wavelet-NAFNet-Mora-best.pth
+Size:          116892024 bytes
+SHA-256:       1ddd26c8cfd66d1a9f50fdcd96f6e0ba57caa9354bc0d7dae863692644907c31
+```
+
+Download both Drive parts into the repository root and reconstruct the frozen
+checkpoint without modifying either part:
+
+```powershell
+New-Item -ItemType Directory -Force scripts/weights | Out-Null
+python -c "from pathlib import Path; ps=[Path('Wavelet-NAFNet-Mora-best.pth.part01'),Path('Wavelet-NAFNet-Mora-best.pth.part02')]; o=Path('scripts/weights/Wavelet-NAFNet-Mora-best.pth'); f=o.open('wb'); [f.write(p.read_bytes()) for p in ps]; f.close()"
+Get-FileHash -Algorithm SHA256 scripts/weights/Wavelet-NAFNet-Mora-best.pth
+```
+
+Part checksums:
+
+```text
+bdf6c359b1fd16ea1689d410321aeac3f6f74161c96759e34709630e47d895d7  Wavelet-NAFNet-Mora-best.pth.part01
+4a2211ed48fe416409cea10903b1ad6ef2ffb86df53cea82533239e8bb7126c7  Wavelet-NAFNet-Mora-best.pth.part02
+```
+
+### Final NCW experiment checkpoint
+
+The best-composite checkpoint documented in the final NCW report is supplied
+separately for exact experiment reproduction:
+
+```text
+Filename:      ncw_1h_best_composite.pth
+Expected path: experiments/ncw_1hour_33db_v5/checkpoints/ncw_1h_best_composite.pth
+Size:          177937000 bytes
+SHA-256:       30bbb067337916eaf938e1f3349ea347061f1a44e106ac505407c35eac42035f
+```
+
+Reconstruct it after downloading both Drive parts into the repository root:
+
+```powershell
+New-Item -ItemType Directory -Force experiments/ncw_1hour_33db_v5/checkpoints | Out-Null
+python -c "from pathlib import Path; ps=[Path('ncw_1h_best_composite.pth.part01'),Path('ncw_1h_best_composite.pth.part02')]; o=Path('experiments/ncw_1hour_33db_v5/checkpoints/ncw_1h_best_composite.pth'); f=o.open('wb'); [f.write(p.read_bytes()) for p in ps]; f.close()"
+Get-FileHash -Algorithm SHA256 experiments/ncw_1hour_33db_v5/checkpoints/ncw_1h_best_composite.pth
+```
+
+Part checksums:
+
+```text
+dc41cdbee41d6971765972fb4e6423a2bfa672df0591595bf4835f526fd62d40  ncw_1h_best_composite.pth.part01
+391e813c7776913aac28e62a6718e8cc41cf5ace1b96e9113a23e8a68e994684  ncw_1h_best_composite.pth.part02
+```
+
 ## Run after training
 
 Run from the repository root. Inference uses local weights and works offline.

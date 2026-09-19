@@ -67,3 +67,70 @@ competition_data/
     |   `-- 480_noise.png
     |
     `-- denoised/
+
+---
+
+# Team Voxel — Preliminary Round Submission
+
+**Frozen commit SHA:** `PENDING_COMMIT_SHA`
+
+## Solution
+
+**NCW-NAFNet** — a NAFNet-w32 restoration backbone wrapped in noise
+conditioning driven by classical signal processing: a fitted Poisson-Gaussian
+variance model `var(I) = a*I + b`, an exact 3x3 median impulse detector built
+from a min/max sorting network, and a four-level orthonormal Haar pyramid.
+Every added path is gated by a scalar initialised to zero, so the wrapper
+starts as an exact identity over the backbone.
+
+Full method, architecture and reproduction instructions:
+[`scripts/README.md`](scripts/README.md).
+Report: [`scripts/report/Voxel_Report.pdf`](scripts/report/Voxel_Report.pdf).
+
+## Run
+
+```bash
+pip install -r scripts/requirements.txt
+python scripts/denoise.py --noise_dir competition_data/submissions/noisy \
+                          --denoised_dir competition_data/submissions/denoised
+```
+
+CPU only, fully offline, deterministic.
+
+## Model file
+
+```text
+Filename:      ncw_1h_best_composite_fp16.pth
+Expected path: scripts/weights/ncw_1h_best_composite_fp16.pth
+Size:          59585807 bytes
+SHA-256:       be1515a1afe066bbd445b6a5b73f04d0141d3ed08e22eaa4cb9fd145df86155b
+```
+
+Committed to this repository — no download required. The float32 original
+(`ncw_1h_best_composite.pth`, 177937000 bytes, SHA-256
+`30bbb067337916eaf938e1f3349ea347061f1a44e106ac505407c35eac42035f`) is
+available on Google Drive and documented in
+[`scripts/README.md`](scripts/README.md); it exceeds GitHub's 100 MB
+regular-file limit and so is not committed.
+
+## Results
+
+Measured on the 46 held-out public images with the unmodified
+`evaluation/evaluate.py`. Image IDs 461-480 were excluded from all fitting,
+checkpoint selection and metric computation.
+
+| Metric | Value |
+|---|---|
+| PSNR | **31.3054** dB |
+| SSIM | **0.919342** |
+| Mean improvement over noisy | **+11.4887** dB PSNR, **+0.463358** SSIM |
+| Official composite | **0.634645** |
+
+Reproduce with `python scripts/validate.py`.
+
+## Compliance
+
+- All custom code lives in `scripts/`.
+- `baseline/`, `evaluation/` and the provided data are unmodified.
+- No image-specific lookup, no test-time metadata, no external training data.
+- Inference is offline and deterministic.

@@ -1,8 +1,7 @@
-# Python 3.11+; install a CUDA-enabled PyTorch build separately to use a GPU.
-torch>=2.6
-numpy>=1.26
-Pillow>=10.4
-scipy>=1.12
-# Only needed for optional wavelet chroma refinement / classical comparisons:
+# Verified on Python 3.11.16 (CPU only).
+# numpy / Pillow / scikit-image are pinned to the versions in
+# evaluation/requirements.txt so local scores match the official scorer exactly.
+torch==2.14.0
+numpy==1.26.4
+Pillow==10.4.0
 scikit-image==0.26.0
-PyWavelets>=1.8

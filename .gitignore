@@ -1,18 +1,24 @@
-/raw_photos/
-/ground_truth/
-
-/noise/
-/evaluations/
-
-# competition dataset images (keep the README tracked)
+# Competition dataset images (the READMEs stay tracked).
 competition_data/public/
-competition_data/submissions/
+competition_data/submissions/noisy/
 
+# Python bytecode.
 __pycache__/
 *.py[cod]
 
-*.pdf
+# Local validation artefacts.
+scripts/_validation/
+scripts/artifacts/
 
-# Large checkpoint delivery artifacts are hosted on Drive, not regular Git.
-/experiments/**/checkpoints/*.pth
-/output/checkpoints/
+# LaTeX build products (the .tex source and the final PDF stay tracked).
+scripts/report/*.aux
+scripts/report/*.log
+scripts/report/*.out
+scripts/report/*.xdv
+
+# The fp32 checkpoint exceeds GitHub's 100 MB file limit; it is delivered via
+# Google Drive and documented in scripts/README.md.
+scripts/weights/ncw_1h_best_composite.pth
+
+# Drive deliverable, rebuilt by scripts/make_submission.py; not a repo artefact.
+/Voxel.zip

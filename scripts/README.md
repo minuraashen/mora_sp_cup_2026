@@ -1,147 +1,194 @@
-# Mora SP Cup denoising
+# NCW-NAFNet — Team Voxel
 
-The current implementation is a **ten-channel, noise-conditioned NAFNet-32 with
-gated Haar-wavelet corrections at the two finest encoder skip scales**.
-See [WAVELET_NAFNET.md](WAVELET_NAFNET.md) for architecture, training, recovery,
-dependencies and reproducibility details.
+Blind denoising of 992x992 8-bit sRGB low-light photographs.
 
-The 5,000-step hybrid experiment is running. Check
-`runs/wavelet_nafnet_20260919/job_status.json` and `training.log` for actual status.
-`training_finished.json` confirms completed training; `verification.json` and
-`RESULTS.md` are produced after final image generation and evaluation.
+**NCW-NAFNet** is a NAFNet-w32 restoration backbone wrapped in noise
+conditioning driven by classical signal processing: a fitted Poisson-Gaussian
+variance model, an exact 3x3 median impulse detector, and a four-level
+orthonormal Haar pyramid. Every added path is scaled by a scalar gate
+initialised to zero, so the wrapper begins as an exact identity over the
+backbone and only departs from it where training demonstrably helps.
 
-## Data and results
+---
 
-- Training: 410 public noisy/ground-truth pairs; fixed validation: 50 pairs.
-- Preliminary test inputs: `competition_data/submissions/noisy/461_noise.png` through `480_noise.png`.
-- New public outputs: `scripts/runs/wavelet_nafnet_20260919/public/001.png` through `460.png`.
-- New test outputs: `scripts/runs/wavelet_nafnet_20260919/submissions/461.png` through `480.png`.
-- Test ZIP: `scripts/runs/wavelet_nafnet_20260919/test_outputs_461-480.zip`.
-- Final metrics and verification: `scripts/runs/wavelet_nafnet_20260919/`.
+## Quick start
 
-Original noisy images and ground truth remain unchanged. Reserved
-`competition_data/**/denoised/` directories remain empty as requested. Old
-pretrained output images are removed only after new outputs pass verification;
-the replacement manifest records their hashes and new locations.
+```bash
+pip install -r scripts/requirements.txt
+python scripts/denoise.py --noise_dir competition_data/submissions/noisy \
+                          --denoised_dir competition_data/submissions/denoised
+```
 
-Test ground truth is hidden, so test PSNR/SSIM cannot be measured locally.
-Final reports distinguish the 50 validation images from all 460 public images,
-which include training data. No 34-35 dB result is assumed.
+Reads every `<id>_noise.png` and writes `<id>.png`. Runs on CPU, makes no
+network requests, and is deterministic — the same input always produces
+byte-identical output.
 
-## Frozen model downloads and checksums
+`--input_dir` / `--output_dir` are accepted as aliases for `--noise_dir` /
+`--denoised_dir`, matching the provided baseline's flag names.
 
-The model files are stored in this Google Drive folder because each complete
-checkpoint is larger than GitHub's regular-file limit:
+| Flag | Default | Meaning |
+|---|---|---|
+| `--noise_dir` | `competition_data/submissions/noisy` | input directory |
+| `--denoised_dir` | `competition_data/submissions/denoised` | output directory |
+| `--weights` | `scripts/weights/ncw_1h_best_composite_fp16.pth` | checkpoint |
+| `--device` | `cpu` | `cpu` or `cuda` |
+| `--tile` | `256` | tile size; `0` forwards the whole image |
+| `--threads` | `0` | torch CPU threads; `0` keeps the default |
 
-<https://drive.google.com/drive/folders/17kgPjzU7mZB9a68rZt4CCm7TQoWH12Ej?usp=sharing>
+## Required model file
 
-### Competition CLI checkpoint
-
-The default `scripts/denoise.py` entry point requires:
+The checkpoint ships in the repository, so no download is needed:
 
 ```text
-Filename:      Wavelet-NAFNet-Mora-best.pth
-Expected path: scripts/weights/Wavelet-NAFNet-Mora-best.pth
-Size:          116892024 bytes
-SHA-256:       1ddd26c8cfd66d1a9f50fdcd96f6e0ba57caa9354bc0d7dae863692644907c31
+Filename:      ncw_1h_best_composite_fp16.pth
+Expected path: scripts/weights/ncw_1h_best_composite_fp16.pth
+Size:          59585807 bytes
+SHA-256:       be1515a1afe066bbd445b6a5b73f04d0141d3ed08e22eaa4cb9fd145df86155b
 ```
 
-Download both Drive parts into the repository root and reconstruct the frozen
-checkpoint without modifying either part:
+It is loaded by `ncw.inference.load_checkpoint`, which reads the resolved
+configuration embedded in the checkpoint, rebuilds the model from it, and loads
+the weights with `strict=True` — all 766 tensors must match, with no missing,
+unexpected or shape-mismatched key. Weights are stored in float16 and upcast to
+float32 at load; all arithmetic is float32.
 
-```powershell
-New-Item -ItemType Directory -Force scripts/weights | Out-Null
-python -c "from pathlib import Path; ps=[Path('Wavelet-NAFNet-Mora-best.pth.part01'),Path('Wavelet-NAFNet-Mora-best.pth.part02')]; o=Path('scripts/weights/Wavelet-NAFNet-Mora-best.pth'); f=o.open('wb'); [f.write(p.read_bytes()) for p in ps]; f.close()"
-Get-FileHash -Algorithm SHA256 scripts/weights/Wavelet-NAFNet-Mora-best.pth
-```
-
-Part checksums:
-
-```text
-bdf6c359b1fd16ea1689d410321aeac3f6f74161c96759e34709630e47d895d7  Wavelet-NAFNet-Mora-best.pth.part01
-4a2211ed48fe416409cea10903b1ad6ef2ffb86df53cea82533239e8bb7126c7  Wavelet-NAFNet-Mora-best.pth.part02
-```
-
-### Final NCW experiment checkpoint
-
-The best-composite checkpoint documented in the final NCW report is supplied
-separately for exact experiment reproduction:
+The float32 original is identical in architecture and is available on Google
+Drive for verification. It is not committed because it exceeds GitHub's 100 MB
+regular-file limit:
 
 ```text
 Filename:      ncw_1h_best_composite.pth
-Expected path: experiments/ncw_1hour_33db_v5/checkpoints/ncw_1h_best_composite.pth
+Expected path: scripts/weights/ncw_1h_best_composite.pth
 Size:          177937000 bytes
 SHA-256:       30bbb067337916eaf938e1f3349ea347061f1a44e106ac505407c35eac42035f
+Drive:         https://drive.google.com/drive/folders/17kgPjzU7mZB9a68rZt4CCm7TQoWH12Ej?usp=sharing
 ```
 
-Reconstruct it after downloading both Drive parts into the repository root:
+Download the two parts into the repository root and reassemble:
 
 ```powershell
-New-Item -ItemType Directory -Force experiments/ncw_1hour_33db_v5/checkpoints | Out-Null
-python -c "from pathlib import Path; ps=[Path('ncw_1h_best_composite.pth.part01'),Path('ncw_1h_best_composite.pth.part02')]; o=Path('experiments/ncw_1hour_33db_v5/checkpoints/ncw_1h_best_composite.pth'); f=o.open('wb'); [f.write(p.read_bytes()) for p in ps]; f.close()"
-Get-FileHash -Algorithm SHA256 experiments/ncw_1hour_33db_v5/checkpoints/ncw_1h_best_composite.pth
+New-Item -ItemType Directory -Force scripts/weights | Out-Null
+python -c "from pathlib import Path; ps=[Path('ncw_1h_best_composite.pth.part01'),Path('ncw_1h_best_composite.pth.part02')]; o=Path('scripts/weights/ncw_1h_best_composite.pth'); f=o.open('wb'); [f.write(p.read_bytes()) for p in ps]; f.close()"
+Get-FileHash -Algorithm SHA256 scripts/weights/ncw_1h_best_composite.pth
 ```
 
-Part checksums:
+Then pass `--weights scripts/weights/ncw_1h_best_composite.pth`.
+
+## Results
+
+Measured on the 46 held-out public images with the unmodified
+`evaluation/evaluate.py`:
+
+| Metric | Value |
+|---|---|
+| PSNR | **31.3054** dB |
+| SSIM | **0.919342** |
+| Mean improvement over noisy | **+11.4887** dB PSNR, **+0.463358** SSIM |
+| Official composite | **0.634645** |
+
+The provided starter baseline scores approximately 0.26, so this is roughly a
+2.4x improvement on the official metric.
+
+```bash
+python scripts/validate.py
+```
+
+Regenerates the held-out split, denoises those images and scores them with the
+official evaluator. Results are written to `scripts/_validation/metrics.json`.
+The run takes about 35 minutes on 12 CPU threads and reproduces the table above
+to seven decimal places; the residual difference is float accumulation order
+across tiles.
+
+The same numbers can be confirmed by calling the official evaluator directly:
+
+```bash
+python evaluation/evaluate.py --noisy_dir competition_data/public/noisy \
+                              --pred_dir scripts/_validation/pred \
+                              --gt_dir <the 46 held-out ground-truth images>
+```
+
+## Layout
 
 ```text
-dc41cdbee41d6971765972fb4e6423a2bfa672df0591595bf4835f526fd62d40  ncw_1h_best_composite.pth.part01
-391e813c7776913aac28e62a6718e8cc41cf5ace1b96e9113a23e8a68e994684  ncw_1h_best_composite.pth.part02
+scripts/
+  denoise.py          competition entry point
+  validate.py         reproduce the held-out metrics
+  make_submission.py  build Voxel.zip from the denoised outputs
+  requirements.txt
+  ncw/
+    nafnet.py         NAFNet backbone (LayerNorm2d, SimpleGate, NAFBlock, NAFNet)
+    wavelet.py        fixed orthonormal Haar analysis
+    conditioning.py   noise model, impulse detector, FiLM and wavelet adapters
+    model.py          NCWNAFNet — the wrapper that ties them together
+    inference.py      checkpoint loading, PNG I/O, overlap-tiled inference
+    evaluation.py     scoring through the organizers' evaluator
+    split.py          the deterministic held-out split
+    paths.py          repository paths
+  analysis/           noise characterization of the 460 public pairs
+  docs/               problem analysis, literature review, solution strategy
+  report/             Voxel_Report.tex and figures
+  tests/              parity and shape tests
+  weights/            model checkpoint
+  licenses/           NAFNet MIT license
 ```
 
-## Run after training
+## Method
 
-Run from the repository root. Inference uses local weights and works offline.
-Default weights: `scripts/weights/Wavelet-NAFNet-Mora-best.pth` (includes the
-training-only noise calibration). Exact hashes appear in the final results.
+**Degradation model.** Residual variance across the 460 public pairs is
+heteroscedastic, `var(I) = a*I + b`, with per-channel coefficients measured in
+`analysis/noise_characterization/`:
 
-```powershell
-python scripts/denoise.py --noise_dir competition_data/submissions/noisy --denoised_dir scripts/runs/my_outputs --device cpu --threads 8
+```text
+a = (0.017095, 0.016532, 0.019045)     shot noise
+b = (0.006362, 0.005684, 0.005492)     read-noise floor
 ```
 
-Windows GPU inference with the matching ONNX export:
+Severity forms a continuum rather than discrete levels, the read floor dominates
+dark regions, and the residual is heavy-tailed with sparse impulses. These are
+the observations the architecture is built around.
 
-```powershell
-.\scripts\.venv-directml\Scripts\python.exe scripts/denoise.py --input_dir competition_data/submissions/noisy --output_dir scripts/runs/my_gpu_outputs --backend directml
+**Classical signal processing.** Three components operate directly on the noisy
+observation, with no learned parameters:
+
+1. *Analytical noise map* — `sqrt(a*I + b)` gives a per-pixel, per-channel
+   standard-deviation estimate from the fitted sensor model, so the network
+   knows how much corruption to expect at each intensity rather than inferring
+   it from scratch.
+2. *Exact 3x3 median* — implemented as a 36-comparison min/max sorting network
+   over nine replicate-padded neighbours. The deviation of each pixel from its
+   local median, channel-max and clipped, isolates impulse defects that a
+   Gaussian model cannot describe.
+3. *Four-level orthonormal Haar pyramid* — recursive decomposition of the LL
+   band; the LH/HL/HH details at each scale expose high-frequency corruption
+   without altering the RGB input the backbone sees.
+
+**Conditioning.** The three sigma channels and the impulse channel form a
+four-channel field. A shared 3x3 projection with two 1x1 heads produces FiLM
+parameters at every encoder stage and the middle block:
+
+```text
+F' = (1 + g_gamma * tanh(gamma(C))) * F + g_beta * beta(C)
 ```
 
-Each output is named `<id>.png`. Reports are saved beside image directories.
-Use a fresh output folder, or `--resume` to reuse previously verified outputs
-from the same model and inference settings. CPU requires `requirements.txt`;
-ONNX GPU additionally requires `requirements-directml.txt`.
+Haar details are projected by a `3x3 -> GELU -> 1x1` adapter and added after
+each downsample. All scalar gates start at zero.
 
-## Train and recover
+**Parameters.** 29,664,484 total — 29,159,715 in the backbone, 504,769 in the
+conditioning and wavelet modules.
 
-```powershell
-.\scripts\.venv-evaluation\Scripts\python.exe -u scripts/run_wavelet_experiment.py
-```
+**Inference.** 256-pixel tiles with a 64-pixel discarded halo for context and a
+separable raised-cosine blend across a 64-pixel overlap, so seams are invisible
+and the receptive field is preserved. Predictions are quantised round-half-up,
+`floor(x*255 + 0.5)`.
 
-The runner performs training and then automatic export, test/public inference,
-official evaluation, CPU fallback checks, output verification and replacement.
-Do not start another copy while it is running.
+## Notes
 
-Resume an interrupted run:
-
-```powershell
-.\scripts\.venv-evaluation\Scripts\python.exe -u scripts/run_wavelet_experiment.py --resume
-```
-
-Recovery checkpoints are saved every 100 steps; all 50 validation images are
-scored every 500 steps. The best EMA checkpoint is selected by official
-composite. Validation PSNR, SSIM and composite are recorded in
-`training_history.jsonl` and printed in `training.log`.
-
-## Previous measured result
-
-The earlier RGB NAFNet completed 1,500 fine-tuning steps on the same split:
-**29.4123 dB PSNR, 0.894395 SSIM, 0.55905854 composite** on 50 validation images.
-The matching starter baseline scored **24.0066 dB, 0.657887, 0.24952984**.
-That checkpoint is retained as `weights/NAFNet-Mora-docs-best.pth`.
-
-[DOCS_IMPLEMENTATION.md](DOCS_IMPLEMENTATION.md) records the first training
-experiment; [PRETRAINED_RUN.md](PRETRAINED_RUN.md) records the original SIDD-only
-inference run. `run_nafnet.py` remains the legacy RGB-model inference utility.
-
-All custom implementation lives in `scripts/`. The baseline, evaluator and
-project knowledge-base files are unchanged. The NAFNet MIT license is retained
-in `licenses/NAFNet-LICENSE.txt`.
+- The model predicts a residual at the original exposure. It performs no gamma
+  correction, tone mapping or global brightness adjustment.
+- No image-specific lookup, no test-time metadata, no external training data.
+  Image IDs 461-480 were excluded from all fitting, checkpoint selection and
+  metric computation.
+- `baseline/`, `evaluation/` and the provided data under `competition_data/`
+  are unmodified.
+- The NAFNet backbone derives from megvii-research/NAFNet (MIT); the license is
+  retained in `licenses/NAFNet-LICENSE.txt`.

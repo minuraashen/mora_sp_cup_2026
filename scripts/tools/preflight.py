@@ -229,6 +229,21 @@ def main() -> int:
               names == [f"{i}.png" for i in EXPECTED_IDS], str(names[:3]))
         check("zip has no __MACOSX/.DS_Store",
               not any(("__MACOSX" in n or ".DS_Store" in n) for n in names))
+
+        # The zip is what the organizers score, so its CONTENTS -- not just its member
+        # names -- must be exactly the files the pipeline produced. A stale zip built
+        # before the final model would pass every other check here.
+        mismatched = []
+        with zipfile.ZipFile(args.zip) as z:
+            for i in EXPECTED_IDS:
+                local = args.pred_dir / f"{i}.png"
+                if not local.exists():
+                    mismatched.append(f"{i}:missing-local")
+                    continue
+                if hashlib.sha256(z.read(f"{i}.png")).hexdigest() != sha256(local):
+                    mismatched.append(i)
+        check("zip contents byte-identical to the rendered PNGs",
+              not mismatched, str(mismatched[:5]))
     else:
         print(f"  [skip] zip not built yet ({args.zip})")
 

@@ -1,8 +1,14 @@
 {
   "arch": "w32",
   "bytes": 58525221,
-  "path": "C:\\Users\\ADMIN\\Desktop\\mora_sp_cup_2026\\scripts\\weights\\voxel_nafnet.pth",
+  "dtype": "fp16 on disk, cast to fp32 at load",
+  "path": "scripts\\weights\\voxel_nafnet.pth",
+  "selected_by": "scripts/tools/select_checkpoint.py over 14 candidates",
   "sha256": "6acdff27227bbde63386f37fb07f06d3db08656bb76b38ae3f3f2c240c903ae8",
+  "source_ckpt": "scripts\\_runs\\run1\\hour_04.pth",
   "step": 38928,
-  "val_composite": null
+  "val_composite": 0.6433182663786372,
+  "val_images": 46,
+  "val_psnr": 31.629504951984767,
+  "val_ssim": 0.9194642720015153
 }

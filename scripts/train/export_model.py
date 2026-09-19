@@ -88,10 +88,19 @@ def main() -> int:
           f"{'OK for git (<100MB)' if size < 100e6 else 'TOO BIG for git'}")
     print(f"  SHA-256     {digest}")
 
-    common.write_json(common.ARTIFACTS_DIR / "model_export.json", {
-        "path": str(args.out), "bytes": size, "sha256": digest, "arch": arch,
-        "step": ck.get("step"), "val_composite": ck.get("composite"),
-    })
+    # Only the canonical weights path owns the provenance record. Exporting a scratch
+    # copy elsewhere (e.g. an fp32 build for a precision comparison) must NOT overwrite
+    # the record describing the model that actually ships -- that record is committed,
+    # and a stale one would point at a file that may not even exist.
+    canonical = common.WEIGHTS_DIR / "voxel_nafnet.pth"
+    if args.out.resolve() == canonical.resolve():
+        common.write_json(common.ARTIFACTS_DIR / "model_export.json", {
+            "path": str(args.out), "bytes": size, "sha256": digest, "arch": arch,
+            "step": ck.get("step"), "val_composite": ck.get("composite"),
+        })
+        print(f"  recorded in {common.ARTIFACTS_DIR / 'model_export.json'}")
+    else:
+        print(f"  (scratch export -- model_export.json left describing {canonical.name})")
     return 0
 
 

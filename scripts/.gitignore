@@ -23,3 +23,10 @@ report/*.fdb_latexmk
 
 __pycache__/
 *.py[cod]
+
+# The repository-root .gitignore has a blanket `*.pdf` rule (it exists to keep the
+# organizers' Participant_Handbook.pdf out of the tree). That rule also silently
+# swallows `git add` of the two PDFs we DO need under scripts/, so re-include them
+# here. Root files may not be edited, but scripts/.gitignore is ours.
+!report/*.pdf
+!report/figs/*.pdf

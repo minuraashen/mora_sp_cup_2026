@@ -84,7 +84,20 @@ python scripts/tools/preflight.py
 which re-runs the pipeline in a clean subprocess, compares SHA-256 against the
 submitted PNGs, and performs a rename test (`461_noise.png` copied to
 `999_noise.png` must yield a byte-identical output) demonstrating that no per-image
-logic exists.
+logic exists. It also checks the freeze record below is not stale.
+
+### Building and freezing the submission bundle
+
+```bash
+python scripts/tools/make_submission.py   # -> Voxel.zip, exactly the 20 PNGs
+python scripts/tools/freeze.py            # -> the freeze record, printed + recorded
+```
+
+`freeze.py` writes `scripts/artifacts/submission_manifest.json`, pinning the SHA-256
+of every submitted PNG, of `Voxel.zip` and of the checkpoint, and prints the block to
+paste into the organizers' submission form. It exits non-zero if the working tree is
+dirty, because the commit SHA it prints would then not describe what is on disk.
+Run it as the **last** step, after the final commit, and report the SHA it prints.
 
 ## Repository layout
 
@@ -100,9 +113,10 @@ scripts/
     infer.py            model loading, whole-image / tiled forward, D4 TTA
     pipeline.py         denoise_image() -- the single definition of the pipeline
   train/                training code (not used at inference)
-  tools/                validation, ablation, preflight, submission packaging
-  weights/              model checkpoint
-  report/               report source
+  tools/                validation, ablation, preflight, submission packaging, freeze
+  weights/              model checkpoint (voxel_nafnet.pth, committed -- no download)
+  artifacts/            provenance: split, checkpoint selection, freeze manifest
+  report/               report source (main.tex + figs; build the PDF on Overleaf)
 ```
 
 `spcup/pipeline.py::denoise_image` is the only definition of what happens to an image;
@@ -148,19 +162,43 @@ distributes only Google Drive links) and verified by exact file size
 ## Official Submission Information
 
 Git Commit SHA:
-`see below` — the official submitted version is **this repository at `HEAD`**, i.e. the
-output of `git rev-parse HEAD` on the submitted private repository. A commit cannot
-contain its own hash, so the literal SHA is supplied to the organizers on the submission
-form; `git log -1` on this repository confirms it, and no commits follow it.
+The official submitted version is **this repository at `HEAD`** — the output of
+`git rev-parse HEAD` on the submitted private repository, with no commits after it.
+A commit cannot contain its own hash, so the literal SHA cannot be written into the
+file it identifies; it is supplied to the organizers on the submission form and
+confirmed by `git log -1` here. Obtain the exact value to report with:
+
+```bash
+python scripts/tools/freeze.py
+```
+
+which prints the SHA and refuses (exit 1) if the working tree is dirty.
 
 Model Checkpoint:
 `voxel_nafnet.pth`
 
 Model Drive Link:
-`N/A — committed to this repository at scripts/weights/voxel_nafnet.pth`
+`N/A` — the checkpoint is **committed to this repository**, so nothing has to be
+downloaded and there is no external link to go stale. It is 58,525,221 bytes
+(fp16 on disk), well inside GitHub's 100 MB per-file limit, and is stored as an
+ordinary git blob — **no Git LFS**, so a plain `git clone` is sufficient.
 
 Expected Model Path:
 `scripts/weights/voxel_nafnet.pth`
 
+Nothing needs to be moved or unpacked after cloning: `denoise.py` resolves this path
+relative to its own location and loads it by default. Only if the checkpoint were
+obtained separately (it should not need to be) would it go at exactly that path,
+under that exact filename, before running the command in *Usage* above.
+
 Model SHA-256:
 `6acdff27227bbde63386f37fb07f06d3db08656bb76b38ae3f3f2c240c903ae8`
+
+Verify after cloning with `sha256sum scripts/weights/voxel_nafnet.pth` (or
+`certutil -hashfile scripts\weights\voxel_nafnet.pth SHA256` on Windows).
+
+Submission bundle:
+`Voxel.zip` — exactly the 20 PNGs `461.png`–`480.png`, flat, no directory prefix.
+Rebuild it with `python scripts/tools/make_submission.py`; its SHA-256 and the
+SHA-256 of each individual image are recorded in
+`scripts/artifacts/submission_manifest.json`.

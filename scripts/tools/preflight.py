@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import ast
 import hashlib
+import json
 import shutil
 import subprocess
 import sys
@@ -246,6 +247,28 @@ def main() -> int:
               not mismatched, str(mismatched[:5]))
     else:
         print(f"  [skip] zip not built yet ({args.zip})")
+
+    # 13 -- the freeze record must describe what is actually being submitted.
+    # A stale manifest is worse than none: it is the document the organizers would
+    # use to re-identify the bundle after the deadline.
+    manifest_path = SCRIPTS / "artifacts" / "submission_manifest.json"
+    if manifest_path.exists():
+        man = json.loads(manifest_path.read_text(encoding="utf-8"))
+        stale = []
+        if args.weights.exists() and man.get("model", {}).get("sha256") != sha256(args.weights):
+            stale.append("model")
+        if args.zip.exists() and man.get("zip", {}).get("sha256") != sha256(args.zip):
+            stale.append("zip")
+        elif not args.zip.exists() and man.get("zip") is not None:
+            stale.append("zip:recorded-but-missing")
+        recorded = man.get("images", {})
+        for i in EXPECTED_IDS:
+            local = args.pred_dir / f"{i}.png"
+            if local.exists() and recorded.get(i) != sha256(local):
+                stale.append(f"image:{i}")
+        check("freeze manifest matches the submitted files", not stale, str(stale[:5]))
+    else:
+        check("freeze manifest present (scripts/tools/freeze.py)", False, str(manifest_path))
 
     n_fail = sum(1 for _, ok, _ in results if not ok)
     print()

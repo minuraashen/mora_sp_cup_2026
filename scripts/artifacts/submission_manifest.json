@@ -1,0 +1,38 @@
+{
+  "command": "python scripts/denoise.py --noise_dir competition_data/submissions/noisy --denoised_dir competition_data/submissions/denoised",
+  "entry_point": "scripts/denoise.py",
+  "images": {
+    "461": "cc83af907b6615ac28dcf446883e5dbd1ec6216227333501042a2e71e7ef2fed",
+    "462": "f0b01269d272a588cf607b00cff3631537712f59902970b40ff2d2e137ea1579",
+    "463": "b8dfb20e8104ec231f0eed0741f8aefb51e3677c5d607047f1faf5426de0593a",
+    "464": "8b4a9e9a9d1d097dc169c6600a184f8e0eacd30db717e7fafd02bf0090ac7c1e",
+    "465": "befa0a945351fc6a6ec4232f75b04a9fd716b5d433c66decb8fcf9f785ff37c9",
+    "466": "8dbfe297d9d8285cc96e6855d8b526a61396d421839e5600a32f17b40dee592b",
+    "467": "aeda1aeb2f37becc056d2170754045b8741995c67b1e6418d143590409de2945",
+    "468": "4e9c836cf74846d227eedf1ec7ccac3ed7b6508d327b9a516fb090d1a1d242ac",
+    "469": "8373797b9e534c9d8248e628413ee157cc18de4b9c0021cd56d0d007b8a2e65d",
+    "470": "65bc9b53af21261d0f1c3a29e15da582b882e33869e6d5f8c1fb69863dfbbecd",
+    "471": "af6335c50227992313356a8ac24f8c63787bc53b52eae207acaa18d76d7beaa1",
+    "472": "7ecdca5cb13db1eae20eca9168c367aa0bd8d4da3e6e16eba9c2e514ff7392bd",
+    "473": "fe336a568ef2ee2892a14cdd6e87d10011eb1781af38200ba8f1d795f095ffbb",
+    "474": "824828eefff5b695039e961e16ef5a04f6a5fbae716c2c4fdf916a979884daf3",
+    "475": "365ef6254a12f8d46ee91dec7faa42637180c0bb875f4435d767701efc68c6a0",
+    "476": "3c958c268e99a8c02d84ace0c5d8c54e07137e080bbd172636d37ef874430c8e",
+    "477": "76265e0a3b657691e0dc24ce1d21ac272a58da9c64534b083f580bf7089e7fb0",
+    "478": "042946c7803a6d60a1b69b5cd6af5c93399b50514219ba76d6db594420dc1c0e",
+    "479": "4927c938cf6f8ac03020fb36cad7b415fb6a3664562a9f4e7cbdfe8737946c4a",
+    "480": "dc9159542650d17499ed15a41c78aba84b0a7f5c741004a275b40a364bf92e1b"
+  },
+  "model": {
+    "bytes": 58525221,
+    "path": "scripts/weights/voxel_nafnet.pth",
+    "sha256": "6acdff27227bbde63386f37fb07f06d3db08656bb76b38ae3f3f2c240c903ae8"
+  },
+  "round": "preliminary",
+  "team": "Voxel",
+  "zip": {
+    "bytes": 30356716,
+    "name": "Voxel.zip",
+    "sha256": "f00c60e37bd9951f9de64f46de8fd49e315acc3264da78b25403e6fcd6c2cefa"
+  }
+}

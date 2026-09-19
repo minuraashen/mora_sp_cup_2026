@@ -168,8 +168,13 @@ def main() -> int:
                  "baseline/requirements.txt", "competition_data/README.md",
                  "evaluation/README.md", "evaluation/evaluate.py",
                  "evaluation/requirements.txt"}
+    # The rule polices team-authored *source*: it must all sit under scripts/. The 20
+    # rendered PNGs under the organizer's documented output folder are generated
+    # artefacts of that source, pinned by the freeze manifest, so they are exempt.
+    OUTPUTS = "competition_data/submissions/denoised/"
     strays = [f for f in r.stdout.split()
-              if not f.startswith("scripts/") and f not in ORGANIZER]
+              if not f.startswith("scripts/") and f not in ORGANIZER
+              and not f.startswith(OUTPUTS)]
     check("all team-authored files live under scripts/", not strays, str(strays[:5]))
 
     # 11a -- no hardcoded ids.

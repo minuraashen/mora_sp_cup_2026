@@ -21,6 +21,7 @@ from nafnet.classical import repair_impulses
 from nafnet.inference import load_model, predict, sha256_file
 from nafnet.losses import restoration_loss
 from nafnet.scoring import score_arrays, summarize
+from nafnet.hybrid import condition_image, upgrade_model
 
 
 def load_rgb(path: Path) -> np.ndarray:
@@ -38,20 +39,22 @@ class PairedCrops:
     """Bounded image cache; training never opens a validation target."""
 
     def __init__(self, data: Path, ids: list[str], fit: dict, seed: int, cache_size: int = 6,
-                 synthetic_probability: float = 0.5):
+                 synthetic_probability: float = 0.5, hybrid: bool = False):
         self.data, self.ids, self.fit = data, ids, fit
         self.rng = np.random.default_rng(seed)
         self.cache = OrderedDict()
         self.cache_size = cache_size
         self.synthetic_probability = synthetic_probability
+        self.hybrid = hybrid
 
     def batch(self, size: int, count: int) -> tuple[torch.Tensor, torch.Tensor]:
         inputs, targets = [], []
         for _ in range(count):
             image_id = str(self.rng.choice(self.ids))
             if image_id not in self.cache:
+                observation = load_rgb(self.data / "noisy" / f"{image_id}_noise.png")
                 self.cache[image_id] = (
-                    load_rgb(self.data / "noisy" / f"{image_id}_noise.png"),
+                    condition_image(observation, self.fit) if self.hybrid else observation,
                     load_rgb(self.data / "ground_truth" / f"{image_id}.png"),
                 )
                 if len(self.cache) > self.cache_size:
@@ -62,9 +65,14 @@ class PairedCrops:
             left = int(self.rng.integers(0, clean.shape[1] - size + 1))
             crop = np.s_[top:top + size, left:left + size]
             clean_crop = clean[crop]
-            noisy_crop = (synthesize(clean_crop, self.fit, self.rng)
-                          if self.rng.random() < self.synthetic_probability else noisy[crop])
-            noisy_crop, _ = repair_impulses(noisy_crop)
+            if self.rng.random() < self.synthetic_probability:
+                noisy_crop = synthesize(clean_crop, self.fit, self.rng)
+                if self.hybrid:
+                    noisy_crop = condition_image(noisy_crop, self.fit)
+            else:
+                noisy_crop = noisy[crop]
+            if not self.hybrid:
+                noisy_crop, _ = repair_impulses(noisy_crop)
             symmetry = int(self.rng.integers(0, 8))
             inputs.append(tensor(transform(noisy_crop, symmetry)))
             targets.append(tensor(transform(clean_crop, symmetry)))
@@ -72,13 +80,14 @@ class PairedCrops:
 
 
 @torch.no_grad()
-def validate(model: torch.nn.Module, data: Path, ids: list[str], device: torch.device) -> tuple[dict, list[dict]]:
+def validate(model: torch.nn.Module, data: Path, ids: list[str], device: torch.device,
+             fit: dict | None = None) -> tuple[dict, list[dict]]:
     model.eval()
     rows = []
     for index, image_id in enumerate(ids, 1):
         noisy = load_rgb(data / "noisy" / f"{image_id}_noise.png")
         clean = load_rgb(data / "ground_truth" / f"{image_id}.png")
-        repaired, _ = repair_impulses(noisy)
+        repaired = condition_image(noisy, fit) if fit is not None else repair_impulses(noisy)[0]
         output = predict(model, tensor(repaired), device, tile=256, overlap=32)
         array = output[0].permute(1, 2, 0).numpy()
         row = {"image_id": image_id, **score_arrays(array, clean, noisy)}
@@ -129,8 +138,10 @@ def main() -> None:
     parser.add_argument("--seed", type=int, help="Augmentation seed; does not change the fixed data split.")
     parser.add_argument("--target-score", type=float,
                         help="Stop after validation reaches this composite; otherwise complete --steps.")
+    parser.add_argument("--hybrid", action="store_true", help="Ten-channel conditioning and two gated Haar skips.")
+    parser.add_argument("--checkpoint-every", type=int, default=100)
     args = parser.parse_args()
-    if min(args.steps, args.batch, args.validate_every, args.threads) < 1:
+    if min(args.steps, args.batch, args.validate_every, args.threads, args.checkpoint_every) < 1:
         parser.error("Step, batch, validation and thread counts must be positive.")
     if not 0 <= args.synthetic_probability <= 1 or not 0 <= args.ema_decay < 1:
         parser.error("Require synthetic probability in [0,1] and EMA decay in [0,1).")
@@ -154,13 +165,17 @@ def main() -> None:
     else:
         device = torch.device(args.device)
     model, config = load_model(args.weights, device)
+    if args.hybrid and model.intro.in_channels == 3:
+        model = upgrade_model(model, config, device)
+    if (model.intro.in_channels == 10) != args.hybrid:
+        raise ValueError("Hybrid checkpoints require --hybrid.")
     model.train().requires_grad_(True)
     ema = deepcopy(model).eval().requires_grad_(False)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4, foreach=False)
     use_amp = args.device == "cuda"
     scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
     sampler = PairedCrops(args.data, split["train"], fit, seed,
-                         synthetic_probability=args.synthetic_probability)
+                         synthetic_probability=args.synthetic_probability, hybrid=args.hybrid)
     steps = 5 if args.benchmark else args.steps
     started = time.perf_counter()
     best_score = -float("inf")
@@ -173,6 +188,7 @@ def main() -> None:
                 "noise_model_sha256": sha256_file(args.run / "noise_model.json"),
                 "synthetic_probability": args.synthetic_probability, "ema_decay": args.ema_decay,
                 "patch_size": args.patch_size, "target_score": args.target_score,
+                "hybrid": args.hybrid, "checkpoint_every": args.checkpoint_every,
                 "loss": "Charbonnier + 0.1 * three-scale SSIM loss + 0.05 * Haar L1",
                 "precision": "CUDA mixed precision" if use_amp else "float32"}
     running_loss = 0.0
@@ -187,6 +203,8 @@ def main() -> None:
         for key, default in (("synthetic_probability", 0.5), ("ema_decay", 0.995), ("patch_size", None)):
             if saved["config"].get(key, default) != metadata[key]:
                 raise ValueError(f"Resume configuration differs: {key}")
+        if saved["config"].get("hybrid", False) != args.hybrid:
+            raise ValueError("Resume architecture differs.")
         model.load_state_dict(saved["model"])
         ema.load_state_dict(saved["ema"])
         optimizer.load_state_dict(saved["optimizer"])
@@ -214,7 +232,8 @@ def main() -> None:
 
     def score_checkpoint(step: int) -> None:
         nonlocal best_score
-        summary, rows = validate(ema, args.data, split["validation"], device)
+        summary, rows = validate(ema, args.data, split["validation"], device,
+                                 fit if args.hybrid else None)
         record = {"step": step, "loss": running_loss / step,
                   "elapsed_seconds": prior_seconds + time.perf_counter() - started, **summary}
         with history_path.open("a", encoding="utf-8") as stream:
@@ -225,6 +244,7 @@ def main() -> None:
                 raise OSError("At least 350 MiB free is required to safely save a new checkpoint.")
             best_score = summary["composite_score"]
             atomic_save({"params_ema": cpu_state(ema.state_dict()),
+                         "noise_model": fit if args.hybrid else None,
                          "training": {**metadata, "selected_step": step, "validation": summary}}, args.output)
             (args.run / "best_validation.json").write_text(json.dumps({"step": step, "summary": summary, "images": rows}, indent=2) + "\n", encoding="utf-8")
             print(f"Selected checkpoint at step {step}: {args.output}", flush=True)
@@ -263,6 +283,8 @@ def main() -> None:
         completed_step = step
         if step % 25 == 0 or args.benchmark or step == steps:
             print(f"Step {step}/{steps} | patch {patch} | loss {loss_value:.6f} | elapsed {time.perf_counter() - started:.1f}s", flush=True)
+        if not args.benchmark and step % args.checkpoint_every == 0 and step % args.validate_every != 0 and step != steps:
+            save_restart(step, False)
         if not args.benchmark and (step % args.validate_every == 0 or step == steps):
             save_restart(step, True)
             score_checkpoint(step)

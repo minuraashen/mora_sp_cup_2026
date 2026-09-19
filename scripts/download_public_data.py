@@ -66,6 +66,7 @@ def main() -> int:
     parser.add_argument("--kind", choices=("noisy", "ground_truth"), default="noisy")
     parser.add_argument("--manifest", type=Path)
     parser.add_argument("--workers", type=int, default=6)
+    parser.add_argument("--split", choices=("public", "submissions"), default="public")
     args = parser.parse_args()
     if args.manifest is None:
         args.manifest = ROOT / f"scripts/runs/public_{args.kind}_manifest.jsonl"
@@ -74,14 +75,17 @@ def main() -> int:
     entries = [json.loads(line) for line in args.manifest.read_text(encoding="utf-8-sig").splitlines()
                if line.strip()]
     suffix = "_noise" if args.kind == "noisy" else ""
-    expected = {f"{index:03d}{suffix}.png" for index in range(1, 461)}
-    if len(entries) != 460 or {entry["name"] for entry in entries} != expected:
-        raise ValueError(f"Manifest must contain exactly public {args.kind} images 001-460.")
+    if args.split == "submissions" and args.kind != "noisy":
+        parser.error("Submission ground truth is hidden; only noisy images may be downloaded.")
+    ids = range(1, 461) if args.split == "public" else range(461, 481)
+    expected = {f"{index:03d}{suffix}.png" for index in ids}
+    if len(entries) != len(expected) or {entry["name"] for entry in entries} != expected:
+        raise ValueError(f"Manifest must contain exactly the expected {args.split} {args.kind} images.")
     if any(not re.fullmatch(r"[A-Za-z0-9_-]+", entry["id"]) for entry in entries):
         raise ValueError("Invalid Drive file id in manifest.")
-    directory = ROOT / "competition_data/public" / args.kind
+    directory = ROOT / "competition_data" / args.split / args.kind
     directory.mkdir(parents=True, exist_ok=True)
-    print(f"Public {args.kind} | {len(entries)} images | {args.workers} download workers", flush=True)
+    print(f"{args.split} {args.kind} | {len(entries)} images | {args.workers} download workers", flush=True)
     results, failures = [], []
     started = time.monotonic()
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
@@ -95,8 +99,8 @@ def main() -> int:
                 print(f"Failed: {entry['name']}: {error}", flush=True)
             count = len(results) + len(failures)
             if count % 20 == 0 or count == len(entries):
-                print(f"[{count:03d}/460] {len(results)} verified | {time.monotonic()-started:.0f}s", flush=True)
-    report = args.manifest.with_name(f"public_{args.kind}_download.json")
+                print(f"[{count:03d}/{len(entries)}] {len(results)} verified | {time.monotonic()-started:.0f}s", flush=True)
+    report = args.manifest.with_name(f"{args.split}_{args.kind}_download.json")
     report.write_text(json.dumps({"images": sorted(results, key=lambda row: row["name"]),
                                   "failures": failures}, indent=2) + "\n", encoding="utf-8")
     print(f"Report: {report}")

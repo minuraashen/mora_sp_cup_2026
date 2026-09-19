@@ -26,7 +26,7 @@ def main() -> None:
     torch.set_num_threads(2)
     model, config = load_model(args.weights, torch.device("cpu"))
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    sample = torch.zeros(1, 3, args.tile, args.tile)
+    sample = torch.zeros(1, model.intro.in_channels, args.tile, args.tile)
     print(f"Exporting NAFNet, tile {args.tile}, opset 17...", flush=True)
     with torch.inference_mode():
         torch.onnx.export(
@@ -38,6 +38,7 @@ def main() -> None:
         "checkpoint_sha256": sha256_file(args.weights),
         "architecture": json.dumps(config), "tile": str(args.tile),
         "model": "NAFNet", "precision": "float32",
+        "input_channels": str(model.intro.in_channels),
     })
     onnx.checker.check_model(graph)
     onnx.save(graph, args.output)

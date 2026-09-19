@@ -1,5 +1,9 @@
 # NAFNet redo guided by the project documentation
 
+Historical first fine-tuning experiment: completed 1,500 steps, with validation
+PSNR 29.4123 dB, SSIM 0.894395 and composite 0.55905854. The subsequent requested
+ten-channel wavelet architecture is documented in [WAVELET_NAFNET.md](WAVELET_NAFNET.md).
+
 This experiment follows all five Markdown files in `docs/`, read in their
 specified order, together with the existing empirical noise study. It revises
 the earlier pretrained-only experiment. The documented **0.60 held-out composite

@@ -37,7 +37,7 @@ def load_model(checkpoint: Path, device: torch.device) -> tuple[NAFNet, dict]:
     state = {name.removeprefix("module."): value for name, value in state.items()}
     if not all(isinstance(value, Tensor) for value in state.values()):
         raise ValueError("The model state dictionary must contain tensors only.")
-    if "intro.weight" not in state or state["intro.weight"].shape[1] != 3:
+    if "intro.weight" not in state or state["intro.weight"].shape[1] not in (3, 10):
         raise ValueError("Expected an RGB NAFNet checkpoint.")
 
     def stage_depths(prefix: str) -> tuple[int, ...]:
@@ -63,7 +63,11 @@ def load_model(checkpoint: Path, device: torch.device) -> tuple[NAFNet, dict]:
         "middle_blocks": len(middle),
         "decoder_blocks": stage_depths("decoders"),
     }
-    model = NAFNet(**config)
+    if state["intro.weight"].shape[1] == 10:
+        from .hybrid import HybridNAFNet
+        model = HybridNAFNet(**config)
+    else:
+        model = NAFNet(**config)
     model.load_state_dict(state, strict=True)
     return model.eval().requires_grad_(False).to(device), config
 
@@ -95,8 +99,8 @@ def predict(
     the selected device at a time. Tiled channel attention differs from a
     whole-image forward pass; tile settings are part of the run configuration.
     """
-    if image.ndim != 4 or image.shape[:2] != (1, 3):
-        raise ValueError("Expected an image tensor with shape [1, 3, height, width].")
+    if image.ndim != 4 or image.shape[0] != 1 or image.shape[1] not in (3, 10):
+        raise ValueError("Expected one RGB or ten-channel conditioned image.")
     if tile < 0 or overlap < 0 or (tile > 0 and overlap >= tile):
         raise ValueError("Tile must be zero (full image) or larger than overlap.")
     height, width = image.shape[-2:]

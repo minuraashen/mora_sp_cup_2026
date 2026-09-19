@@ -40,7 +40,8 @@ class DirectMLModel(nn.Module):
         if metadata.get("precision") != "float32" or metadata.get("model") != "NAFNet":
             raise ValueError("Expected a float32 NAFNet export from export_nafnet.py.")
         self.tile = int(metadata["tile"])
-        if tile != self.tile or self.session.get_inputs()[0].shape != [1, 3, tile, tile]:
+        self.input_channels = int(metadata.get("input_channels", 3))
+        if tile != self.tile or self.session.get_inputs()[0].shape != [1, self.input_channels, tile, tile]:
             raise ValueError(f"This ONNX export requires --tile {self.tile}.")
         self.config = json.loads(metadata["architecture"])
         self.provenance = {
@@ -50,7 +51,7 @@ class DirectMLModel(nn.Module):
         }
 
     def forward(self, image: torch.Tensor) -> torch.Tensor:
-        if tuple(image.shape) != (1, 3, self.tile, self.tile):
+        if tuple(image.shape) != (1, self.input_channels, self.tile, self.tile):
             raise ValueError(f"DirectML requires {self.tile}-pixel tiles; use PyTorch for smaller images.")
         array = np.ascontiguousarray(image.detach().cpu().numpy(), dtype=np.float32)
         result = self.session.run(["denoised"], {"noisy": array})[0]

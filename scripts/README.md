@@ -1,8 +1,9 @@
 # Team Voxel — Mora SP Cup 2026 Preliminary Submission
 
-Blind low-light sRGB denoising with a NAFNet restoration core fine-tuned on the 460
-public pairs, trained against a synthetic-noise generator fitted to the measured
-degradation of this dataset.
+Blind low-light sRGB denoising with a NAFNet restoration core fine-tuned on **414 of the
+460 public pairs** — the remaining **46 are held out for validation and are never trained
+on**, nor used by the synthetic-noise generator — against a noise model fitted to the
+measured degradation of this dataset.
 
 > **Important — Submission Freeze**
 >
@@ -55,7 +56,7 @@ Useful optional flags:
 | --- | --- | --- |
 | `--device {cpu,cuda,auto}` | `cpu` | `cpu` is the submitted configuration. `cuda` is faster but CPU and GPU kernels differ numerically, so it is *not* what the submission was generated with. |
 | `--tile N` | `0` | `0` runs the whole image in one pass (992 is a multiple of 32, so no padding is needed). `>0` enables overlap-tiled inference; this also engages automatically if memory runs out. |
-| `--tta {1,4,8}` | `1` | $D_4$ self-ensemble. Off by default: ~`+0.01` composite for 8× the CPU runtime. |
+| `--tta {1,4,8}` | `1` | D4 self-ensemble. Off by default on measured evidence: `+0.0031` composite for `8.67×` the CPU runtime (84.5 s/image instead of 9.74 s). `--tta 4` is `+0.0023` for `4.37×`. |
 | `--prepass` | off | Enables the classical gated adaptive-median impulse repair before the network. Off by default because it was **measured** to cost composite: a gate sweep (k = 4.5/6/8/12) showed the score rising monotonically as fewer pixels are filtered. It is always applied in `--mode classical`, where it is worth +0.0152. |
 | `--mode {net,classical}` | `net` | `classical` runs the self-contained fallback denoiser with no model. |
 | `--num_threads N` | `min(8, cpu_count)` | CPU thread count, pinned for reproducibility. |
@@ -115,9 +116,18 @@ python scripts/train/prepare_data.py                    # pack data, build the s
 python scripts/tools/check_metric.py                    # assert metrics match the official scorer
 python scripts/tools/check_noise_model.py               # assert the synthetic noise matches measurement
 python scripts/train/fetch_weights.py --model nafnet_sidd_w32
-python scripts/train/train.py --run run1 --init scripts/weights/NAFNet-SIDD-width32.pth
-python scripts/train/export_model.py --ckpt scripts/_runs/run1/best_ema.pth
+python scripts/train/train.py --run run1 --init scripts/weights/NAFNet-SIDD-width32.pth \
+    --arch w32 --iters 48000 --patch_schedule 0:256x4 --lr 2e-4 --lr_min 1e-6 \
+    --warmup 500 --wd 1e-3 --ema 0.9995 --ema_start 2000 --p_synth 0.4 --seed 1337
+python scripts/tools/select_checkpoint.py --run run1     # re-scores every checkpoint
+python scripts/train/export_model.py --ckpt scripts/_runs/run1/hour_04.pth --which model
 ```
+
+The exported model is whichever weight set `select_checkpoint.py` ranks first on the
+held-out split, **not** whichever the training loop labelled "best": validation during
+training alternated between a 23-image subset and the full 46, and those scores are not
+comparable. For this run the winner was `hour_04.pth:model` (step 38,928, composite
+0.643318); the top six candidates spanned only 0.0012.
 
 Validation and ablations:
 
@@ -130,7 +140,7 @@ python scripts/tools/ablate.py --emit latex
 
 The restoration core is initialised from the publicly released **NAFNet-SIDD-width32**
 checkpoint (Chen et al., ECCV 2022; `megvii-research/NAFNet`, MIT/Apache-2.0) and then
-fine-tuned on the competition's own 460 public pairs. The initialisation was obtained
+fine-tuned on the competition's own public data (414 training ids). The initialisation was obtained
 from the mirror `https://huggingface.co/nyanko7/nafnet-models` (the upstream project
 distributes only Google Drive links) and verified by exact file size
 (116,861,841 bytes), parameter count (29,159,715) and a `strict=True` load.

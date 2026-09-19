@@ -27,10 +27,13 @@ import matplotlib.pyplot as plt
 SEED = 0
 rng = np.random.default_rng(SEED)
 
-ROOT = "C:/Users/ADMIN/Desktop/mora_sp_cup_2026"
+# Derived from this file's own location, never hardcoded: the organizers run this
+# from a fresh clone at an unknown path.
+#   scripts/analysis/noise_characterization/characterize.py -> repo root is parents[3]
+OUT = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(OUT)))
 GT_DIR = os.path.join(ROOT, "competition_data/public/ground_truth")
 NOISY_DIR = os.path.join(ROOT, "competition_data/public/noisy")
-OUT = os.path.join(ROOT, "analysis/noise_characterization")
 os.makedirs(OUT, exist_ok=True)
 
 N_IMAGES = 460

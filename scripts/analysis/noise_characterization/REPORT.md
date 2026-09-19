@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-18 | **Env:** conda `spcup26` (python 3.11.16, numpy 1.26.4, scikit-image 0.26.0, scipy 1.17.1, opencv 4.10.0, Pillow 10.4.0) | **Seed:** 0
 **Data:** 460 paired public images, `competition_data/public/{ground_truth/NNN.png, noisy/NNN_noise.png}`, 992x992 RGB 8-bit (read-only).
-**Reproduce:** from repo root, `python analysis/noise_characterization/characterize.py`. Regenerates all figures and `metrics.json`.
+**Reproduce:** from repo root, `python scripts/analysis/noise_characterization/characterize.py`. Regenerates all figures and `metrics.json`.
 
 ## Package deviations (noted per instructions)
 - Installed `matplotlib==3.11.2` (allowed by task) -- figures only.

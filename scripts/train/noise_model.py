@@ -2,7 +2,7 @@
 noise_model.py -- the measured low-light sensor-noise synthesizer (GPU, seeded).
 
 Every constant here was measured on the 460 public pairs; see
-analysis/noise_characterization/REPORT.md. Nothing is guessed.
+scripts/analysis/noise_characterization/REPORT.md. Nothing is guessed.
 
   var(residual) = s^2 * (a_c * I + b_c)      I in [0,255], per channel c
       a = [4.359, 4.216, 4.857]  (shot / signal-dependent term)

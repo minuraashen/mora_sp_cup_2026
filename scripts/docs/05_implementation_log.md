@@ -176,7 +176,7 @@ measured 0.033–0.05 % impulse rate.
 ## 3. Validation methodology
 
 - **Split**: the 460 ids are sorted by the pre-computed blind σ
-  (`analysis/noise_characterization/_sigma_blind.npy`) and every 10th starting at index
+  (`scripts/analysis/noise_characterization/_sigma_blind.npy`) and every 10th starting at index
   5 is held out → **414 train / 46 validation**, of which every 2nd (23 images) forms
   the in-training fast-validation subset. Deterministic, no RNG, and severity-stratified
   by construction: the held-out σ range is 7.57–40.66 against a full-set range of

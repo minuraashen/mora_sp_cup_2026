@@ -152,13 +152,25 @@ def main() -> int:
     else:
         check("checkpoint present", False, str(args.weights))
 
-    # 10 -- scope: only scripts/ (and our own docs/analysis) may change
+    # 10 -- scope. The brief is explicit on both halves of this: teams may not change
+    # files outside their own directory, and all custom code goes in scripts/. So we
+    # assert both, rather than only the first.
     r = subprocess.run(["git", "status", "--porcelain"], cwd=REPO, capture_output=True, text=True)
     touched = [ln[3:].strip().strip('"') for ln in r.stdout.splitlines() if ln.strip()]
     forbidden = [t for t in touched
                  if t.startswith(("baseline/", "evaluation/", "competition_data/"))]
     check("no modifications under baseline/ evaluation/ competition_data/",
           not forbidden, str(forbidden[:5]))
+
+    # Every tracked file must be either organizer-provided or under scripts/.
+    r = subprocess.run(["git", "ls-files"], cwd=REPO, capture_output=True, text=True)
+    ORGANIZER = {".gitignore", "README.md", "baseline/README.md", "baseline/denoise.py",
+                 "baseline/requirements.txt", "competition_data/README.md",
+                 "evaluation/README.md", "evaluation/evaluate.py",
+                 "evaluation/requirements.txt"}
+    strays = [f for f in r.stdout.split()
+              if not f.startswith("scripts/") and f not in ORGANIZER]
+    check("all team-authored files live under scripts/", not strays, str(strays[:5]))
 
     # 11a -- no hardcoded ids.
     # Searched against the CODE only: docstrings and comments legitimately mention

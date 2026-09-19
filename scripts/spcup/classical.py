@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import numpy as np
 
-# Measured per-channel noise model, 8-bit units (analysis/noise_characterization).
+# Measured per-channel noise model, 8-bit units (scripts/analysis/noise_characterization).
 A_COEF = np.array([4.35921, 4.21573, 4.85656], dtype=np.float32)
 B_COEF = np.array([413.721, 369.608, 357.141], dtype=np.float32)
 

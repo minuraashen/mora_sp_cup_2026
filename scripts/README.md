@@ -116,6 +116,8 @@ scripts/
   tools/                validation, ablation, preflight, submission packaging, freeze
   weights/              model checkpoint (voxel_nafnet.pth, committed -- no download)
   artifacts/            provenance: split, checkpoint selection, freeze manifest
+  analysis/             the measured noise characterisation the noise model is fitted to
+  docs/                 our working analysis of the brief, the metric and the strategy
   report/               report source (main.tex + figs; build the PDF on Overleaf)
 ```
 
@@ -162,17 +164,28 @@ distributes only Google Drive links) and verified by exact file size
 ## Official Submission Information
 
 Git Commit SHA:
-The official submitted version is **this repository at `HEAD`** — the output of
-`git rev-parse HEAD` on the submitted private repository, with no commits after it.
-A commit cannot contain its own hash, so the literal SHA cannot be written into the
-file it identifies; it is supplied to the organizers on the submission form and
-confirmed by `git log -1` here. Obtain the exact value to report with:
+
+<!-- FROZEN-COMMIT-BEGIN -->
+`0000000000000000000000000000000000000000`
+<!-- FROZEN-COMMIT-END -->
+
+This is the frozen preliminary-round code submission.
+
+*On the one-commit offset, stated plainly so nothing looks inconsistent:* a git commit
+is named by a hash taken over its own contents, so no file inside a commit can contain
+that commit's own SHA — it is a hash fixed point, not an oversight. The SHA above is
+therefore the last **content** commit, and the current `HEAD` is the commit that wrote
+this line and nothing else. `scripts/tools/freeze.py` verifies exactly that: it exits
+non-zero unless `HEAD` is a direct child of the SHA above whose only change is this
+block. Both values are printed by
 
 ```bash
 python scripts/tools/freeze.py
 ```
 
-which prints the SHA and refuses (exit 1) if the working tree is dirty.
+and both are given on the submission form, so the code identified either way is
+identical. Re-stamp after any further commit with `python scripts/tools/freeze.py
+--stamp`, then commit.
 
 Model Checkpoint:
 `voxel_nafnet.pth`

@@ -4,7 +4,7 @@ check_noise_model.py -- HARD GATE on the synthetic-noise generator.
 40% of every training batch is synthetic. If the generator does not reproduce the
 measured degradation, that 40% is actively teaching the network the wrong inverse
 problem. So before training we synthesize noise onto real clean images and check the
-residual statistics against analysis/noise_characterization/metrics.json:
+residual statistics against scripts/analysis/noise_characterization/metrics.json:
 
   * per-channel residual std            (target: the real residual's own std)
   * excess kurtosis                     (target 1.86 / 2.04 / 2.36, heavy tailed)

@@ -36,12 +36,12 @@ PUBLIC_GT = REPO_ROOT / "competition_data" / "public" / "ground_truth"
 SUBMISSION_NOISY = REPO_ROOT / "competition_data" / "submissions" / "noisy"
 SUBMISSION_DENOISED = REPO_ROOT / "competition_data" / "submissions" / "denoised"
 
-ANALYSIS_DIR = REPO_ROOT / "analysis" / "noise_characterization"
+ANALYSIS_DIR = SCRIPTS_DIR / "analysis" / "noise_characterization"
 
 N_PUBLIC = 460
 IMG_SIZE = 992
 
-# Measured noise model (8-bit units), from analysis/noise_characterization/REPORT.md
+# Measured noise model (8-bit units), from scripts/analysis/noise_characterization/REPORT.md
 # var(residual) = A_COEF[c] * I + B_COEF[c]   with I the clean intensity in [0, 255]
 A_COEF = (4.35921, 4.21573, 4.85656)     # R, G, B
 B_COEF = (413.721, 369.608, 357.141)     # R, G, B

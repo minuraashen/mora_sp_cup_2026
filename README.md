@@ -72,7 +72,12 @@ competition_data/
 
 # Team Voxel — Preliminary Round Submission
 
-**Frozen commit SHA:** `PENDING_COMMIT_SHA`
+**Frozen submission commit:** `07c1e2d3da10fafa2ff0cf519af0ec3cc55d7a24`
+
+That commit contains the complete submitted solution: code, model checkpoint,
+report and the 20 denoised outputs. The only commit after it is this one, which
+exists solely to record the SHA above (a commit cannot contain its own hash).
+The tip of `main` is therefore the submitted version.
 
 ## Solution
 
